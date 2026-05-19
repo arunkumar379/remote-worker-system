@@ -28,13 +28,25 @@ app.get("/", (req, res) => {
   res.send("Backend Running");
 });
 
+
+// REGISTER
 app.post("/register", async (req, res) => {
 
   try {
 
     const { name, email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const existingUser =
+      await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User Already Exists",
+      });
+    }
+
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
 
     const user = new User({
       name,
@@ -58,13 +70,16 @@ app.post("/register", async (req, res) => {
   }
 });
 
+
+// LOGIN
 app.post("/login", async (req, res) => {
 
   try {
 
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user =
+      await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({
@@ -72,10 +87,11 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
     if (!isMatch) {
       return res.status(400).json({
@@ -103,26 +119,56 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
+// CHECK IN
 app.post("/checkin", async (req, res) => {
 
   try {
 
     const { userId } = req.body;
 
-    const attendance = new Attendance({
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID Missing",
+      });
+    }
 
-      userId,
+    const today =
+      new Date().toDateString();
 
-      checkIn: new Date(),
+    const alreadyCheckedIn =
+      await Attendance.findOne({
+        userId,
+        date: today,
+        checkOut: null,
+      });
 
-      date: new Date().toDateString(),
+    if (alreadyCheckedIn) {
+      return res.status(400).json({
+        message: "Already Checked In",
+      });
+    }
 
-    });
+    const attendance =
+      new Attendance({
+
+        userId,
+
+        checkIn: new Date(),
+
+        checkOut: null,
+
+        totalHours: "0",
+
+        date: today,
+
+      });
 
     await attendance.save();
 
     res.json({
-      message: "Checked In Successfully",
+      message:
+        "Checked In Successfully",
     });
 
   } catch (err) {
@@ -135,35 +181,47 @@ app.post("/checkin", async (req, res) => {
   }
 });
 
+
+// CHECK OUT
 app.post("/checkout", async (req, res) => {
 
   try {
 
     const { userId } = req.body;
 
-    const today = new Date().toDateString();
-
     const attendance =
       await Attendance.findOne({
         userId,
-        date: today,
+        checkOut: null,
       });
 
-    attendance.checkOut = new Date();
+    if (!attendance) {
+      return res.status(400).json({
+        message:
+          "No Active Check In",
+      });
+    }
 
-    const totalHours =
-      (attendance.checkOut -
-        attendance.checkIn) /
-      (1000 * 60 * 60);
+    attendance.checkOut =
+      new Date();
+
+    const diff =
+      attendance.checkOut -
+      attendance.checkIn;
+
+    const hours =
+      (diff / (1000 * 60 * 60))
+      .toFixed(2);
 
     attendance.totalHours =
-      totalHours.toFixed(2);
+      hours;
 
     await attendance.save();
 
     res.json({
-      message: "Checked Out Successfully",
-      totalHours,
+      message:
+        "Checked Out Successfully",
+      totalHours: hours,
     });
 
   } catch (err) {
@@ -175,47 +233,68 @@ app.post("/checkout", async (req, res) => {
     });
   }
 });
-app.get("/attendance/:userId", async (req, res) => {
 
-  try {
 
-    const attendance =
-      await Attendance.find({
-        userId: req.params.userId,
-      }).sort({ createdAt: -1 });
+// USER ATTENDANCE
+app.get(
+  "/attendance/:userId",
+  async (req, res) => {
 
-    res.json(attendance);
+    try {
 
-  } catch (err) {
+      const attendance =
+        await Attendance.find({
+          userId:
+            req.params.userId,
+        }).sort({
+          createdAt: -1,
+        });
 
-    console.log(err);
+      res.json(attendance);
 
-    res.status(500).json({
-      message: "Failed To Load Attendance",
-    });
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Failed To Load Attendance",
+      });
+    }
   }
-});
-app.get("/all-attendance", async (req, res) => {
+);
 
-  try {
 
-    const attendance =
-      await Attendance.find()
-      .populate("userId")
-      .sort({ createdAt: -1 });
+// ADMIN ATTENDANCE
+app.get(
+  "/all-attendance",
+  async (req, res) => {
 
-    res.json(attendance);
+    try {
 
-  } catch (err) {
+      const attendance =
+        await Attendance.find()
+        .populate("userId")
+        .sort({
+          createdAt: -1,
+        });
 
-    console.log(err);
+      res.json(attendance);
 
-    res.status(500).json({
-      message: "Failed To Load Data",
-    });
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Failed To Load Data",
+      });
+    }
   }
-});
+);
 
 app.listen(5000, () => {
-  console.log("Server running on port 5000");
+  console.log(
+    "Server running on port 5000"
+  );
 });
