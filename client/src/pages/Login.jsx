@@ -9,12 +9,19 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const API =
+    "https://remote-worker-backend.onrender.com";
+
   const registerUser = async () => {
 
     try {
 
+      if (!name || !email || !password) {
+        return alert("Fill all fields");
+      }
+
       const response = await axios.post(
-        "http://localhost:5000/register",
+        `${API}/register`,
         {
           name,
           email,
@@ -24,11 +31,16 @@ function Login() {
 
       alert(response.data.message);
 
+      setIsLogin(true);
+
     } catch (error) {
 
       console.log(error);
 
-      alert("Registration Failed");
+      alert(
+        error?.response?.data?.message ||
+        "Registration Failed"
+      );
     }
   };
 
@@ -36,8 +48,12 @@ function Login() {
 
     try {
 
+      if (!email || !password) {
+        return alert("Fill all fields");
+      }
+
       const response = await axios.post(
-        "http://localhost:5000/login",
+        `${API}/login`,
         {
           email,
           password,
@@ -56,31 +72,37 @@ function Login() {
 
       alert("Login Successful");
 
+      window.location.reload();
+
     } catch (error) {
 
       console.log(error);
 
-      alert("Login Failed");
+      alert(
+        error?.response?.data?.message ||
+        "Login Failed"
+      );
     }
   };
 
   return (
     <div
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         background:
           "linear-gradient(135deg,#020617,#0f172a,#1e1b4b)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         fontFamily: "Arial",
+        padding: "20px",
       }}
     >
       <div
         style={{
           width: "420px",
           padding: "45px",
-          borderRadius: "25px",
+          borderRadius: "30px",
           background: "rgba(255,255,255,0.08)",
           backdropFilter: "blur(15px)",
           border: "1px solid rgba(255,255,255,0.1)",
@@ -92,8 +114,9 @@ function Login() {
           style={{
             color: "white",
             textAlign: "center",
-            fontSize: "38px",
+            fontSize: "42px",
             marginBottom: "10px",
+            fontWeight: "bold",
           }}
         >
           Remote Worker
@@ -104,21 +127,23 @@ function Login() {
             color: "#cbd5e1",
             textAlign: "center",
             marginBottom: "35px",
+            fontSize: "15px",
           }}
         >
-          Employee Attendance Management
+          Professional Employee Attendance System
         </p>
 
         {!isLogin && (
           <input
             type="text"
             placeholder="Full Name"
+            value={name}
             onChange={(e) => setName(e.target.value)}
             style={{
               width: "100%",
-              padding: "15px",
+              padding: "16px",
               marginBottom: "18px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: "none",
               outline: "none",
               background: "rgba(255,255,255,0.1)",
@@ -131,12 +156,13 @@ function Login() {
         <input
           type="email"
           placeholder="Email Address"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={{
             width: "100%",
-            padding: "15px",
+            padding: "16px",
             marginBottom: "18px",
-            borderRadius: "12px",
+            borderRadius: "14px",
             border: "none",
             outline: "none",
             background: "rgba(255,255,255,0.1)",
@@ -148,12 +174,13 @@ function Login() {
         <input
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{
             width: "100%",
-            padding: "15px",
+            padding: "16px",
             marginBottom: "25px",
-            borderRadius: "12px",
+            borderRadius: "14px",
             border: "none",
             outline: "none",
             background: "rgba(255,255,255,0.1)",
@@ -167,9 +194,9 @@ function Login() {
             onClick={loginUser}
             style={{
               width: "100%",
-              padding: "15px",
+              padding: "16px",
               border: "none",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 "linear-gradient(to right,#2563eb,#1d4ed8)",
               color: "white",
@@ -185,9 +212,9 @@ function Login() {
             onClick={registerUser}
             style={{
               width: "100%",
-              padding: "15px",
+              padding: "16px",
               border: "none",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 "linear-gradient(to right,#22c55e,#16a34a)",
               color: "white",
@@ -207,6 +234,7 @@ function Login() {
             textAlign: "center",
             marginTop: "25px",
             cursor: "pointer",
+            fontSize: "15px",
           }}
         >
           {isLogin
