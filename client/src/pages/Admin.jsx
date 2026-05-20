@@ -139,7 +139,7 @@ function Admin() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
 
         <div className="bg-gradient-to-r from-violet-600 to-indigo-700 rounded-3xl p-6">
 
@@ -209,6 +209,49 @@ function Admin() {
             </div>
 
             <Users className="w-14 h-14 text-white" />
+
+          </div>
+
+        </div>
+
+        {/* Absentees Card */}
+        <div className="bg-gradient-to-r from-red-600 to-rose-700 rounded-3xl p-6">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+
+              <p className="text-red-100 mb-2">
+                Absentees
+              </p>
+
+              <h2 className="text-5xl font-bold">
+
+                {
+                  new Set(
+                    attendance.map(
+                      (a) =>
+                        a.userId?._id
+                    )
+                  ).size === 0
+                    ? 0
+                    : Math.max(
+                        0,
+                        leaves.length -
+                          new Set(
+                            attendance.map(
+                              (a) =>
+                                a.userId?._id
+                            )
+                          ).size
+                      )
+                }
+
+              </h2>
+
+            </div>
+
+            <XCircle className="w-14 h-14 text-white" />
 
           </div>
 
