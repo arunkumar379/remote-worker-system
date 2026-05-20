@@ -22,6 +22,9 @@ function Admin() {
   const [leaves, setLeaves] =
     useState([]);
 
+  const token =
+    localStorage.getItem("token");
+
   useEffect(() => {
 
     loadAttendance();
@@ -43,7 +46,12 @@ function Admin() {
 
       const response =
         await axios.get(
-          "https://remote-worker-backend.onrender.com/all-attendance"
+          "https://remote-worker-backend.onrender.com/all-attendance",
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
         );
 
       setAttendance(response.data);
@@ -60,7 +68,12 @@ function Admin() {
 
       const response =
         await axios.get(
-          "https://remote-worker-backend.onrender.com/all-leaves"
+          "https://remote-worker-backend.onrender.com/all-leaves",
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
         );
 
       setLeaves(response.data);
@@ -76,7 +89,13 @@ function Admin() {
     try {
 
       await axios.put(
-        `https://remote-worker-backend.onrender.com/approve-leave/${id}`
+        `https://remote-worker-backend.onrender.com/approve-leave/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
       );
 
       alert("Leave Approved");
@@ -94,7 +113,13 @@ function Admin() {
     try {
 
       await axios.put(
-        `https://remote-worker-backend.onrender.com/reject-leave/${id}`
+        `https://remote-worker-backend.onrender.com/reject-leave/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
       );
 
       alert("Leave Rejected");
@@ -214,7 +239,7 @@ function Admin() {
 
         </div>
 
-        {/* Absentees Card */}
+        {/* Absentees */}
         <div className="bg-gradient-to-r from-red-600 to-rose-700 rounded-3xl p-6">
 
           <div className="flex items-center justify-between">
@@ -228,23 +253,16 @@ function Admin() {
               <h2 className="text-5xl font-bold">
 
                 {
-                  new Set(
-                    attendance.map(
-                      (a) =>
-                        a.userId?._id
-                    )
-                  ).size === 0
-                    ? 0
-                    : Math.max(
-                        0,
-                        leaves.length -
-                          new Set(
-                            attendance.map(
-                              (a) =>
-                                a.userId?._id
-                            )
-                          ).size
-                      )
+                  Math.max(
+                    0,
+                    leaves.length -
+                      new Set(
+                        attendance.map(
+                          (a) =>
+                            a.userId?._id
+                        )
+                      ).size
+                  )
                 }
 
               </h2>
