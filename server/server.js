@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const User = require("./models/User");
 const Attendance = require("./models/Attendance");
+const Leave = require("./models/Leave");
 
 const app = express();
 
@@ -288,6 +289,107 @@ app.get(
       res.status(500).json({
         message:
           "Failed To Load Data",
+      });
+    }
+  }
+);
+
+
+// APPLY LEAVE
+app.post(
+  "/apply-leave",
+  async (req, res) => {
+
+    try {
+
+      const {
+        userId,
+        reason,
+        fromDate,
+        toDate,
+      } = req.body;
+
+      const leave =
+        new Leave({
+          userId,
+          reason,
+          fromDate,
+          toDate,
+        });
+
+      await leave.save();
+
+      res.json({
+        message:
+          "Leave Applied Successfully",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Leave Application Failed",
+      });
+    }
+  }
+);
+
+
+// GET USER LEAVES
+app.get(
+  "/leaves/:userId",
+  async (req, res) => {
+
+    try {
+
+      const leaves =
+        await Leave.find({
+          userId:
+            req.params.userId,
+        }).sort({
+          createdAt: -1,
+        });
+
+      res.json(leaves);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Failed To Load Leaves",
+      });
+    }
+  }
+);
+
+
+// ADMIN ALL LEAVES
+app.get(
+  "/all-leaves",
+  async (req, res) => {
+
+    try {
+
+      const leaves =
+        await Leave.find()
+        .populate("userId")
+        .sort({
+          createdAt: -1,
+        });
+
+      res.json(leaves);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Failed To Load Leaves",
       });
     }
   }
