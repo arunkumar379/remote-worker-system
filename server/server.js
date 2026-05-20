@@ -155,16 +155,28 @@ app.post("/checkin", async (req, res) => {
       });
     }
 
+    const now = new Date();
+
+    const late =
+      now.getHours() >= 9 &&
+      now.getMinutes() > 15;
+
     const attendance =
       new Attendance({
 
         userId,
 
-        checkIn: new Date(),
+        checkIn: now,
 
         checkOut: null,
 
         totalHours: "0",
+
+        late,
+
+        status: "Present",
+
+        earlyLeave: false,
 
         date: today,
 
@@ -174,7 +186,9 @@ app.post("/checkin", async (req, res) => {
 
     res.json({
       message:
-        "Checked In Successfully",
+        late
+          ? "Checked In Late"
+          : "Checked In Successfully",
     });
 
   } catch (err) {
@@ -209,8 +223,14 @@ app.post("/checkout", async (req, res) => {
       });
     }
 
-    attendance.checkOut =
+    const checkoutTime =
       new Date();
+
+    const earlyLeave =
+      checkoutTime.getHours() < 18;
+
+    attendance.checkOut =
+      checkoutTime;
 
     const diff =
       attendance.checkOut -
@@ -223,11 +243,17 @@ app.post("/checkout", async (req, res) => {
     attendance.totalHours =
       hours;
 
+    attendance.earlyLeave =
+      earlyLeave;
+
     await attendance.save();
 
     res.json({
       message:
-        "Checked Out Successfully",
+        earlyLeave
+          ? "Checked Out Early"
+          : "Checked Out Successfully",
+
       totalHours: hours,
     });
 
