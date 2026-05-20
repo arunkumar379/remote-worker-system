@@ -34,10 +34,9 @@ function Admin() {
 
   const logout = () => {
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.clear();
 
-    window.location.reload();
+    window.location.href = "/";
   };
 
   const loadAttendance = async () => {
@@ -239,7 +238,6 @@ function Admin() {
 
         </div>
 
-        {/* Absentees */}
         <div className="bg-gradient-to-r from-red-600 to-rose-700 rounded-3xl p-6">
 
           <div className="flex items-center justify-between">
