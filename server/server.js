@@ -35,8 +35,12 @@ app.post("/register", async (req, res) => {
 
   try {
 
-    const { name, email, password } =
-      req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+    } = req.body;
 
     const existingUser =
       await User.findOne({ email });
@@ -54,6 +58,8 @@ app.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role:
+        role || "employee",
     });
 
     await user.save();
@@ -104,7 +110,10 @@ app.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id },
+      {
+        id: user._id,
+        role: user.role,
+      },
       process.env.JWT_SECRET
     );
 
@@ -118,7 +127,8 @@ app.post("/login", async (req, res) => {
     console.log(err);
 
     res.status(500).json({
-      message: "Login Failed",
+      message:
+        "Login Failed",
     });
   }
 });
