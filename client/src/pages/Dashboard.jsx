@@ -3,23 +3,32 @@ import {
   Clock3,
   LogOut,
   Users,
-  CheckCircle2,
   CalendarDays,
+  Activity,
+  Briefcase,
 } from "lucide-react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useEffect, useState } from "react";
 
 import axios from "axios";
 
-export default function ProfessionalDashboard() {
+export default function Dashboard() {
 
   const user = JSON.parse(
     localStorage.getItem("user")
   );
 
-  const [time, setTime] = useState(
-    new Date()
-  );
+  const [time, setTime] =
+    useState(new Date());
 
   const [attendance, setAttendance] =
     useState([]);
@@ -29,6 +38,24 @@ export default function ProfessionalDashboard() {
 
   const [todayHours, setTodayHours] =
     useState("0");
+
+  const [reason, setReason] =
+    useState("");
+
+  const [fromDate, setFromDate] =
+    useState("");
+
+  const [toDate, setToDate] =
+    useState("");
+
+  const chartData = [
+    { day: "Mon", hours: 6 },
+    { day: "Tue", hours: 8 },
+    { day: "Wed", hours: 7 },
+    { day: "Thu", hours: 9 },
+    { day: "Fri", hours: 5 },
+    { day: "Sat", hours: 4 },
+  ];
 
   useEffect(() => {
 
@@ -48,22 +75,27 @@ export default function ProfessionalDashboard() {
 
     try {
 
-      const response = await axios.get(
-        `http://localhost:5000/attendance/${user._id}`
-      );
+      const response =
+        await axios.get(
+          `https://remote-worker-backend.onrender.com/attendance/${user._id}`
+        );
 
       setAttendance(response.data);
 
       if (response.data.length > 0) {
 
-        const latest = response.data[0];
+        const latest =
+          response.data[0];
 
         if (
           latest.checkIn &&
           !latest.checkOut
         ) {
+
           setStatus("Working");
+
         } else {
+
           setStatus("Offline");
         }
 
@@ -78,6 +110,88 @@ export default function ProfessionalDashboard() {
     }
   };
 
+  const checkIn = async () => {
+
+    try {
+
+      const response =
+        await axios.post(
+          "https://remote-worker-backend.onrender.com/checkin",
+          {
+            userId: user._id,
+          }
+        );
+
+      alert(response.data.message);
+
+      loadAttendance();
+
+    } catch (error) {
+
+      alert(
+        error?.response?.data?.message ||
+        "Check In Failed"
+      );
+    }
+  };
+
+  const checkOut = async () => {
+
+    try {
+
+      const response =
+        await axios.post(
+          "https://remote-worker-backend.onrender.com/checkout",
+          {
+            userId: user._id,
+          }
+        );
+
+      alert(
+        `Worked ${response.data.totalHours} hrs`
+      );
+
+      loadAttendance();
+
+    } catch (error) {
+
+      alert(
+        error?.response?.data?.message ||
+        "Check Out Failed"
+      );
+    }
+  };
+
+  const applyLeave = async () => {
+
+    try {
+
+      const response =
+        await axios.post(
+          "https://remote-worker-backend.onrender.com/apply-leave",
+          {
+            userId: user._id,
+            reason,
+            fromDate,
+            toDate,
+          }
+        );
+
+      alert(response.data.message);
+
+      setReason("");
+      setFromDate("");
+      setToDate("");
+
+    } catch (error) {
+
+      alert(
+        error?.response?.data?.message ||
+        "Leave Apply Failed"
+      );
+    }
+  };
+
   const logout = () => {
 
     localStorage.removeItem("token");
@@ -86,112 +200,73 @@ export default function ProfessionalDashboard() {
     window.location.reload();
   };
 
-  const checkIn = async () => {
-
-    try {
-
-      const response = await axios.post(
-        "http://localhost:5000/checkin",
-        {
-          userId: user._id,
-        }
-      );
-
-      alert(response.data.message);
-
-      loadAttendance();
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert("Check In Failed");
-    }
-  };
-
-  const checkOut = async () => {
-
-    try {
-
-      const response = await axios.post(
-        "http://localhost:5000/checkout",
-        {
-          userId: user._id,
-        }
-      );
-
-      alert(
-        `Checked Out Successfully
-
-Total Hours:
-${response.data.totalHours}`
-      );
-
-      loadAttendance();
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert("Check Out Failed");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-black text-white flex overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-black text-white flex">
 
       {/* Sidebar */}
-      <div className="w-72 bg-gradient-to-b from-violet-900 via-slate-950 to-black border-r border-violet-500/20 p-6 hidden lg:flex flex-col justify-between shadow-2xl">
+      <div className="w-72 bg-black/30 backdrop-blur-xl border-r border-white/10 p-6 hidden lg:flex flex-col justify-between">
 
         <div>
 
           <div className="flex items-center gap-3 mb-12">
 
-            <div className="w-14 h-14 rounded-3xl bg-gradient-to-r from-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl font-bold shadow-lg">
+            <div className="w-14 h-14 rounded-3xl bg-gradient-to-r from-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl font-bold">
               RW
             </div>
 
             <div>
+
               <h1 className="text-2xl font-bold">
                 Remote Worker
               </h1>
 
               <p className="text-slate-400 text-sm">
-                Employee System
+                HR Management
               </p>
+
             </div>
 
           </div>
 
           <div className="space-y-4">
 
-            <div className="bg-gradient-to-r from-violet-600/30 to-fuchsia-600/20 border border-violet-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-lg">
+            <div className="bg-violet-600/20 border border-violet-500/30 rounded-2xl p-4 flex items-center gap-3">
 
-              <Users className="w-5 h-5 text-violet-300" />
+              <Activity className="w-5 h-5" />
 
-              <span className="font-medium">
-                Dashboard
-              </span>
+              Dashboard
 
             </div>
 
-            <div className="bg-slate-800/70 rounded-2xl p-4 flex items-center gap-3 text-slate-300 hover:bg-violet-600/20 hover:text-white transition-all cursor-pointer">
+            <div className="bg-slate-800/60 rounded-2xl p-4 flex items-center gap-3">
 
               <Clock3 className="w-5 h-5" />
 
-              <span>
-                Attendance
-              </span>
+              Attendance
 
             </div>
 
-            <div className="bg-slate-800/70 rounded-2xl p-4 flex items-center gap-3 text-slate-300 hover:bg-cyan-600/20 hover:text-white transition-all cursor-pointer">
+            <div className="bg-slate-800/60 rounded-2xl p-4 flex items-center gap-3">
+
+              <Users className="w-5 h-5" />
+
+              Employees
+
+            </div>
+
+            <div className="bg-slate-800/60 rounded-2xl p-4 flex items-center gap-3">
 
               <CalendarDays className="w-5 h-5" />
 
-              <span>
-                Reports
-              </span>
+              Leaves
+
+            </div>
+
+            <div className="bg-slate-800/60 rounded-2xl p-4 flex items-center gap-3">
+
+              <Briefcase className="w-5 h-5" />
+
+              Reports
 
             </div>
 
@@ -201,10 +276,13 @@ ${response.data.totalHours}`
 
         <button
           onClick={logout}
-          className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:scale-105 transition-all rounded-2xl py-4 flex items-center justify-center gap-3 font-semibold shadow-lg"
+          className="bg-gradient-to-r from-red-500 to-rose-600 p-4 rounded-2xl flex items-center justify-center gap-3 font-semibold"
         >
+
           <LogOut className="w-5 h-5" />
+
           Logout
+
         </button>
 
       </div>
@@ -212,20 +290,20 @@ ${response.data.totalHours}`
       {/* Main */}
       <div className="flex-1 p-6 lg:p-10 overflow-y-auto">
 
-        {/* Header */}
+        {/* Top */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
 
           <div>
 
-            <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-violet-300 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold mb-3">
               Welcome Back 👋
             </h1>
 
             <p className="text-slate-400 text-lg">
-              {user?.name || "Employee"}
+              {user?.name}
             </p>
 
-            <p className="text-cyan-400 mt-2 text-lg">
+            <p className="text-cyan-400 mt-2">
               {time.toLocaleDateString()} •{" "}
               {time.toLocaleTimeString()}
             </p>
@@ -234,19 +312,9 @@ ${response.data.totalHours}`
 
           <div className="flex items-center gap-4">
 
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-lg">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+
               <Bell className="w-6 h-6 text-yellow-400" />
-            </div>
-
-            <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-violet-500/20 rounded-2xl px-6 py-4 shadow-lg">
-
-              <p className="text-sm text-slate-400">
-                Employee ID
-              </p>
-
-              <h2 className="font-bold text-xl">
-                EMP-1024
-              </h2>
 
             </div>
 
@@ -254,10 +322,10 @@ ${response.data.totalHours}`
 
         </div>
 
-        {/* Stats */}
+        {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
 
-          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-3xl p-6 shadow-2xl hover:scale-105 transition-all">
+          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-3xl p-6">
 
             <p className="text-violet-100 mb-3">
               Working Hours
@@ -269,7 +337,7 @@ ${response.data.totalHours}`
 
           </div>
 
-          <div className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-6 shadow-2xl hover:scale-105 transition-all">
+          <div className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-6">
 
             <p className="text-cyan-100 mb-3">
               Attendance
@@ -281,163 +349,126 @@ ${response.data.totalHours}`
 
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-3xl p-6 shadow-2xl hover:scale-105 transition-all">
+          <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-3xl p-6">
 
             <p className="text-green-100 mb-3">
-              Tasks Completed
+              Productivity
             </p>
 
             <h2 className="text-5xl font-bold">
-              24
+              92%
             </h2>
 
           </div>
 
-          <div className="bg-gradient-to-br from-rose-600 to-pink-700 rounded-3xl p-6 shadow-2xl hover:scale-105 transition-all">
+          <div className="bg-gradient-to-br from-rose-600 to-pink-700 rounded-3xl p-6">
 
             <p className="text-rose-100 mb-3">
               Status
             </p>
 
-            <div className="flex items-center gap-2 mt-4">
-
-              <CheckCircle2
-                className={
-                  status === "Working"
-                    ? "text-green-300"
-                    : "text-red-300"
-                }
-              />
-
-              <span className="text-2xl font-bold">
-                {status}
-              </span>
-
-            </div>
+            <h2 className="text-4xl font-bold">
+              {status}
+            </h2>
 
           </div>
 
         </div>
 
-        {/* Attendance Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {/* Buttons */}
+        <div className="flex flex-wrap gap-5 mb-10">
 
-          <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-3xl p-8 shadow-2xl">
+          <button
+            onClick={checkIn}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4 rounded-2xl font-bold text-lg"
+          >
+            Start Work
+          </button>
 
-            <h2 className="text-3xl font-bold mb-4">
-              Check In
-            </h2>
-
-            <p className="text-green-100 mb-8 text-lg">
-              Start your workday attendance.
-            </p>
-
-            <button
-              onClick={checkIn}
-              className="bg-white text-black px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all"
-            >
-              Start Work
-            </button>
-
-          </div>
-
-          <div className="bg-gradient-to-br from-red-600 to-rose-700 rounded-3xl p-8 shadow-2xl">
-
-            <h2 className="text-3xl font-bold mb-4">
-              Check Out
-            </h2>
-
-            <p className="text-red-100 mb-8 text-lg">
-              End your workday attendance.
-            </p>
-
-            <button
-              onClick={checkOut}
-              className="bg-white text-black px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all"
-            >
-              End Work
-            </button>
-
-          </div>
+          <button
+            onClick={checkOut}
+            className="bg-gradient-to-r from-red-500 to-rose-600 px-8 py-4 rounded-2xl font-bold text-lg"
+          >
+            End Work
+          </button>
 
         </div>
 
-        {/* Attendance Table */}
-
-        <div className="bg-slate-900/70 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+        {/* Leave Form */}
+        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 mb-10">
 
           <h2 className="text-3xl font-bold mb-6">
-            Attendance History
+            Apply Leave 📅
           </h2>
 
-          <div className="overflow-x-auto">
+          <div className="grid md:grid-cols-3 gap-5">
 
-            <table className="w-full">
+            <input
+              type="text"
+              placeholder="Reason"
+              value={reason}
+              onChange={(e) =>
+                setReason(e.target.value)
+              }
+              className="bg-slate-800 border border-white/10 rounded-2xl p-4 outline-none"
+            />
 
-              <thead>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) =>
+                setFromDate(e.target.value)
+              }
+              className="bg-slate-800 border border-white/10 rounded-2xl p-4 outline-none"
+            />
 
-                <tr className="text-left border-b border-slate-700 text-slate-400">
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) =>
+                setToDate(e.target.value)
+              }
+              className="bg-slate-800 border border-white/10 rounded-2xl p-4 outline-none"
+            />
 
-                  <th className="pb-4">
-                    Date
-                  </th>
+          </div>
 
-                  <th className="pb-4">
-                    Check In
-                  </th>
+          <button
+            onClick={applyLeave}
+            className="mt-6 bg-gradient-to-r from-yellow-500 to-orange-600 px-8 py-4 rounded-2xl font-bold"
+          >
+            Apply Leave
+          </button>
 
-                  <th className="pb-4">
-                    Check Out
-                  </th>
+        </div>
 
-                  <th className="pb-4">
-                    Hours
-                  </th>
+        {/* Chart */}
+        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6">
 
-                </tr>
+          <h2 className="text-2xl font-bold mb-6">
+            Weekly Analytics
+          </h2>
 
-              </thead>
+          <div style={{ width: "100%", height: 300 }}>
 
-              <tbody>
+            <ResponsiveContainer>
 
-                {attendance.map((item) => (
+              <BarChart data={chartData}>
 
-                  <tr
-                    key={item._id}
-                    className="border-b border-slate-800"
-                  >
+                <XAxis dataKey="day" />
 
-                    <td className="py-4">
-                      {item.date}
-                    </td>
+                <YAxis />
 
-                    <td>
-                      {item.checkIn
-                        ? new Date(
-                            item.checkIn
-                          ).toLocaleTimeString()
-                        : "--"}
-                    </td>
+                <Tooltip />
 
-                    <td>
-                      {item.checkOut
-                        ? new Date(
-                            item.checkOut
-                          ).toLocaleTimeString()
-                        : "--"}
-                    </td>
+                <Bar
+                  dataKey="hours"
+                  radius={[10, 10, 0, 0]}
+                />
 
-                    <td>
-                      {item.totalHours || "--"}
-                    </td>
+              </BarChart>
 
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
+            </ResponsiveContainer>
 
           </div>
 

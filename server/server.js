@@ -35,7 +35,8 @@ app.post("/register", async (req, res) => {
 
   try {
 
-    const { name, email, password } = req.body;
+    const { name, email, password } =
+      req.body;
 
     const existingUser =
       await User.findOne({ email });
@@ -66,7 +67,8 @@ app.post("/register", async (req, res) => {
     console.log(err);
 
     res.status(500).json({
-      message: "Registration Failed",
+      message:
+        "Registration Failed",
     });
   }
 });
@@ -77,7 +79,8 @@ app.post("/login", async (req, res) => {
 
   try {
 
-    const { email, password } = req.body;
+    const { email, password } =
+      req.body;
 
     const user =
       await User.findOne({ email });
@@ -130,7 +133,8 @@ app.post("/checkin", async (req, res) => {
 
     if (!userId) {
       return res.status(400).json({
-        message: "User ID Missing",
+        message:
+          "User ID Missing",
       });
     }
 
@@ -146,7 +150,8 @@ app.post("/checkin", async (req, res) => {
 
     if (alreadyCheckedIn) {
       return res.status(400).json({
-        message: "Already Checked In",
+        message:
+          "Already Checked In",
       });
     }
 
@@ -177,7 +182,8 @@ app.post("/checkin", async (req, res) => {
     console.log(err);
 
     res.status(500).json({
-      message: "Check In Failed",
+      message:
+        "Check In Failed",
     });
   }
 });
@@ -230,7 +236,8 @@ app.post("/checkout", async (req, res) => {
     console.log(err);
 
     res.status(500).json({
-      message: "Check Out Failed",
+      message:
+        "Check Out Failed",
     });
   }
 });
@@ -337,7 +344,7 @@ app.post(
 );
 
 
-// GET USER LEAVES
+// USER LEAVES
 app.get(
   "/leaves/:userId",
   async (req, res) => {
@@ -390,6 +397,70 @@ app.get(
       res.status(500).json({
         message:
           "Failed To Load Leaves",
+      });
+    }
+  }
+);
+
+
+// APPROVE LEAVE
+app.put(
+  "/approve-leave/:id",
+  async (req, res) => {
+
+    try {
+
+      await Leave.findByIdAndUpdate(
+        req.params.id,
+        {
+          status: "Approved",
+        }
+      );
+
+      res.json({
+        message:
+          "Leave Approved",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Approval Failed",
+      });
+    }
+  }
+);
+
+
+// REJECT LEAVE
+app.put(
+  "/reject-leave/:id",
+  async (req, res) => {
+
+    try {
+
+      await Leave.findByIdAndUpdate(
+        req.params.id,
+        {
+          status: "Rejected",
+        }
+      );
+
+      res.json({
+        message:
+          "Leave Rejected",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Reject Failed",
       });
     }
   }
